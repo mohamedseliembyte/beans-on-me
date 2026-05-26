@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Beans on Me ☕</title>
+  <title>Beans on Me</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#2C1A0E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Beans on Me" />
+  <link rel="apple-touch-icon" id="pwa-touch-icon" href="" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
   <style>
@@ -1694,6 +1700,84 @@
       }
     });
   }, 30000);
+
+  // ===== PWA: service worker =====
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
+  // ===== PWA: generate apple-touch-icon from logo canvas =====
+  (function generatePWAIcon() {
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const cx = size / 2, cy = size / 2;
+
+    // Background
+    ctx.fillStyle = '#2C1A0E';
+    ctx.beginPath();
+    ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 26 outer beans
+    const outerR = size * 0.41;
+    const bW = size * 0.048, bH = size * 0.092;
+    for (let i = 0; i < 26; i++) {
+      const angle = (i / 26) * Math.PI * 2 - Math.PI / 2;
+      const bx = cx + outerR * Math.cos(angle);
+      const by = cy + outerR * Math.sin(angle);
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(angle + Math.PI / 2);
+      ctx.fillStyle = '#C07D3A';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, bW, bH, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(44,26,14,0.55)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, bW * 0.38, bH * 0.85, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Red dashed inner circle
+    ctx.save();
+    ctx.strokeStyle = '#D94F3B';
+    ctx.lineWidth = size * 0.022;
+    ctx.setLineDash([size * 0.038, size * 0.022]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.305, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Two center beans
+    const cbW = size * 0.105, cbH = size * 0.195;
+    [[-0.075, -28], [0.075, 28]].forEach(([ox, deg]) => {
+      ctx.save();
+      ctx.translate(cx + ox * size, cy + size * 0.015);
+      ctx.rotate(deg * Math.PI / 180);
+      ctx.fillStyle = '#C07D3A';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, cbW, cbH, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(44,26,14,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, cbW * 0.36, cbH * 0.84, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Text
+    ctx.fillStyle = '#FDF8F0';
+    ctx.font = `900 ${size * 0.115}px Nunito, Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('beans on me', cx, cy + size * 0.38);
+
+    const dataURL = canvas.toDataURL('image/png');
+    document.getElementById('pwa-touch-icon').href = dataURL;
+  })();
 </script>
 </body>
 </html>
